@@ -49,8 +49,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	public void create () {
 		batch = new SpriteBatch();
 		//img = new Texture("badlogic.jpg");
-		img = new Texture("Minecraft Experimental Skin1.8.png");
-		//imgAutomatic = new Texture("badlogic.jpg");
+		//img = new Texture("Minecraft Experimental Skin1.8.png");
+		imgAutomatic = new Texture("badlogic.jpg");
 
 		//score = 0;
 		yourScoreName = "score: 0";
@@ -84,8 +84,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void render () {
 
-		move();
-		//moveAutomatic();
+		//move();
+		moveAutomatic();
 //		button.addListener(new ChangeListener() {
 //			@Override
 //			public void changed (ChangeListener.ChangeEvent event, Actor actor) {
@@ -96,16 +96,14 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.begin();
-		batch.draw(img, x, y);
-		//batch.draw(imgAutomatic, directionX, directionY);
+		//batch.draw(img, x, y);
+		batch.draw(imgAutomatic, xAutomatic + directionX, yAutomatic + directionY);
 		yourBitmapFontName.setColor(1.0f, 1.0f, 1.0f, 1.0f);
 		yourBitmapFontName.draw(batch, yourScoreName, 25, 100);
 		batch.end();
 
 		super.render();
 		stage.draw();
-
-
 
 	}
 
@@ -153,23 +151,23 @@ public class MyGdxGame extends ApplicationAdapter {
 //to move one of the sprites in a snakelike way(it is automatically moving, and controlling it changes direction)
 	void moveAutomatic() {
 		if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-			yAutomatic = 1;
+			directionX = 0; directionY = 1;
 		}
 		if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-			yAutomatic = -1;
+			directionX = 0; directionY = -1;
 		}
 		if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-			xAutomatic = 1;
+			directionX = 1; directionY = 0;
 		}
 		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-			xAutomatic = -1;
+			directionX = -1; directionY = 0;
 		}
 
 		//directionX = Gdx.graphics.getDeltaTime();
 		//directionY = Gdx.graphics.getDeltaTime();
 
-		y += yv * Gdx.graphics.getDeltaTime();
-		x += xv * Gdx.graphics.getDeltaTime();
+		yAutomatic += directionY;
+		xAutomatic += directionX;
 
 		//yv = decelerate(yv);
 		//xv = decelerate(xv);
