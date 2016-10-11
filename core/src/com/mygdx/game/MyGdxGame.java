@@ -6,25 +6,33 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+//import com.badlogic.gdx.scenes.scene2d.ui.List;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.actor;
 
 public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch batch;
 	Texture img;
-
-	Texture imgAutomatic;
+	Texture imgTail;
+	Texture imgHead;
+	float index;
+	ArrayList<Float> crumbsX = new ArrayList<Float>();
+	ArrayList<Float> crumbsY = new ArrayList<Float>();
 
 	float x, y, xv, yv;
 
-	float xAutomatic, yAutomatic, xvAutomatic, yvAutomatic;
+	float xAutomatic, yAutomatic, xTail, yTail;
 
 	float directionX = 1;
 
@@ -35,6 +43,9 @@ public class MyGdxGame extends ApplicationAdapter {
 	TextButton.TextButtonStyle textButtonStyle;
 	BitmapFont font;
 
+
+	Sprite head;
+	Sprite tail;
 	//private int score;
 	String yourScoreName;
 	BitmapFont yourBitmapFontName;
@@ -50,7 +61,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch = new SpriteBatch();
 		//img = new Texture("badlogic.jpg");
 		//img = new Texture("Minecraft Experimental Skin1.8.png");
-		imgAutomatic = new Texture("badlogic.jpg");
+		imgHead = new Texture("badlogic.jpg");
+		imgTail = new Texture("badlogic.jpg");
+
+		head = new Sprite(imgHead);
+		tail = new Sprite(imgTail);
 
 		//score = 0;
 		yourScoreName = "score: 0";
@@ -68,6 +83,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		//textButtonStyle.down = skin.getDrawable("down-button");
 		//textButtonStyle.checked = skin.getDrawable("checked-button");
 		button = new TextButton("Button1", textButtonStyle);
+		//button.setOrigin(100, 0);
+		button.setPosition(75, 0);
 		stage.addActor(button);
 
 		button.addListener(new ChangeListener() {
@@ -97,7 +114,35 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.begin();
 		//batch.draw(img, x, y);
-		batch.draw(imgAutomatic, xAutomatic + directionX, yAutomatic + directionY);
+		//batch.draw(imgHead, xAutomatic + directionX, yAutomatic + directionY);
+		batch.draw(imgHead, xAutomatic, yAutomatic);
+		if((index - 256) < 0)
+		{
+			batch.draw(imgTail, crumbsX.get(0), crumbsY.get(0));
+		}
+		else {
+			batch.draw(imgTail, crumbsX.get((int)(index - 256)), crumbsY.get((int)(index - 256)));
+		}
+		//System.out.println("the height/width of tail " + head.getHeight() + " " + head.getWidth());
+//		if(tail.getX() + tail.getWidth() == head.getX()) {
+//			batch.draw(imgTail, (xAutomatic) - tail.getWidth(), yAutomatic);
+//		}
+//		else if (tail.getY() + tail.getHeight() == head.getY())
+//		{
+//			batch.draw(imgTail, (xAutomatic), (yAutomatic) - imgTail.getHeight());
+//		}
+//		else if (tail.getX() == head.getX() + head.getWidth())
+//		{
+//			batch.draw(imgTail, (xAutomatic) + tail.getWidth(), yAutomatic);
+//		}
+//		else if (tail.getY() == head.getY() + head.getHeight())
+//		{
+//			batch.draw(imgTail, (xAutomatic), (yAutomatic) + imgTail.getHeight());
+//		}
+//		else
+//		{
+//			batch.draw(imgTail, 0, 0);
+//		}
 		yourBitmapFontName.setColor(1.0f, 1.0f, 1.0f, 1.0f);
 		yourBitmapFontName.draw(batch, yourScoreName, 25, 100);
 		batch.end();
@@ -163,11 +208,22 @@ public class MyGdxGame extends ApplicationAdapter {
 			directionX = -1; directionY = 0;
 		}
 
+		xTail = xAutomatic - tail.getWidth();
+		yTail = yAutomatic - tail.getHeight();
 		//directionX = Gdx.graphics.getDeltaTime();
 		//directionY = Gdx.graphics.getDeltaTime();
 
 		yAutomatic += directionY;
 		xAutomatic += directionX;
+
+		crumbsX.add(xAutomatic);
+		crumbsY.add(yAutomatic);
+		index++;
+
+//		if (xAutomatic > imgTail.getWidth())
+//		{
+//
+//		}
 
 		//yv = decelerate(yv);
 		//xv = decelerate(xv);
