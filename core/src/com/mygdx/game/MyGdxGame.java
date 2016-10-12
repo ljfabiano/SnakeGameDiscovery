@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 //import com.badlogic.gdx.scenes.scene2d.ui.List;
@@ -30,6 +31,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	ArrayList<Float> crumbsX = new ArrayList<Float>();
 	ArrayList<Float> crumbsY = new ArrayList<Float>();
 
+	boolean collision = false;
+
 	float x, y, xv, yv;
 
 	float xAutomatic, yAutomatic, xTail, yTail;
@@ -38,11 +41,19 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	float directionY = 0;
 
+	float headWidth = 256;
+	float headHeight = 256;
+
+
 	Stage stage;
 	TextButton button;
 	TextButton.TextButtonStyle textButtonStyle;
 	BitmapFont font;
-
+	Rectangle playBoundaryLeft;
+	Rectangle playBoundaryRight;
+	Rectangle playBoundaryTop;
+	Rectangle playBoundaryBottom;
+	Rectangle snakeHeadCollisionDetection;
 
 	Sprite head;
 	Sprite tail;
@@ -63,7 +74,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		//img = new Texture("Minecraft Experimental Skin1.8.png");
 		imgHead = new Texture("badlogic.jpg");
 		imgTail = new Texture("badlogic.jpg");
-
+		Sprite bottomBoundary = new Sprite();
+		bottomBoundary.setSize(80, 1);
+		bottomBoundary.setPosition(0f, 0f);
+		playBoundaryBottom = new Rectangle(bottomBoundary.getX(), bottomBoundary.getY(), bottomBoundary.getWidth(), bottomBoundary.getHeight());
+		//playBoundaryBottom = new Rectangle(-2f, -2f, 802f, 1f);
+		Actor boundary;
 		head = new Sprite(imgHead);
 		tail = new Sprite(imgTail);
 
@@ -97,32 +113,48 @@ public class MyGdxGame extends ApplicationAdapter {
 		});
 
 	}
-
+	//method is called every frame
 	@Override
 	public void render () {
 
 		//move();
 		moveAutomatic();
+		if(detectWallCollision(xAutomatic, yAutomatic) == true)
+		{
+			System.out.println("collision with bottom boundary");
+		}
 //		button.addListener(new ChangeListener() {
 //			@Override
 //			public void changed (ChangeListener.ChangeEvent event, Actor actor) {
 //				System.out.println("Button Pressed");
 //			}
 //		});
-
+//boolean isOverlapping =
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+//		if(head.getBoundingRectangle().overlaps(playBoundaryBottom))
+//		{
+//			//System.out.println("head is over boundary");
+//			//System.out.println("head bounding rectangle stats: " + head.getBoundingRectangle().getX() + " " + head.getBoundingRectangle().getY() + " " + head.getBoundingRectangle().getWidth() + " " + head.getBoundingRectangle().getHeight());
+//		}
+//		if(playBoundaryBottom.overlaps(head.getBoundingRectangle()))
+//		{
+//			System.out.println("boundary is over head");
+//		}
+
 		batch.begin();
 		//batch.draw(img, x, y);
 		//batch.draw(imgHead, xAutomatic + directionX, yAutomatic + directionY);
 		batch.draw(imgHead, xAutomatic, yAutomatic);
-		if((index - 256) < 0)
+		if((index - headWidth) < 0)
 		{
 			batch.draw(imgTail, crumbsX.get(0), crumbsY.get(0));
 		}
 		else {
-			batch.draw(imgTail, crumbsX.get((int)(index - 256)), crumbsY.get((int)(index - 256)));
+			batch.draw(imgTail, crumbsX.get((int)(index - headWidth)), crumbsY.get((int)(index - headHeight)));
 		}
+
 		//System.out.println("the height/width of tail " + head.getHeight() + " " + head.getWidth());
 //		if(tail.getX() + tail.getWidth() == head.getX()) {
 //			batch.draw(imgTail, (xAutomatic) - tail.getWidth(), yAutomatic);
@@ -143,12 +175,17 @@ public class MyGdxGame extends ApplicationAdapter {
 //		{
 //			batch.draw(imgTail, 0, 0);
 //		}
+
+
+
 		yourBitmapFontName.setColor(1.0f, 1.0f, 1.0f, 1.0f);
 		yourBitmapFontName.draw(batch, yourScoreName, 25, 100);
 		batch.end();
 
 		super.render();
 		stage.draw();
+		//reset the collision boolean so it can be tested again next render cycle
+		collision = false;
 
 	}
 
@@ -174,7 +211,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
 			xv = MAX_VELOCITY * -1;
 		}
-
+		//Delta time is time between the current frame and the last frame
+		//Think of it like using "per second" in place of deltatime
+		//This is used to avoid issues of different FPS values for different machines for consistently
 		y += yv * Gdx.graphics.getDeltaTime();
 		x += xv * Gdx.graphics.getDeltaTime();
 
@@ -213,12 +252,17 @@ public class MyGdxGame extends ApplicationAdapter {
 		//directionX = Gdx.graphics.getDeltaTime();
 		//directionY = Gdx.graphics.getDeltaTime();
 
-		yAutomatic += directionY;
 		xAutomatic += directionX;
+		yAutomatic += directionY;
 
 		crumbsX.add(xAutomatic);
 		crumbsY.add(yAutomatic);
 		index++;
+
+//		if(head.getBoundingRectangle().overlaps(playBoundaryBottom))
+//		{
+//			System.out.println("Game over man! Game Over!");
+//		}
 
 //		if (xAutomatic > imgTail.getWidth())
 //		{
@@ -233,6 +277,15 @@ public class MyGdxGame extends ApplicationAdapter {
 //			yourScoreName = "score: " + score;
 //			dropSound.play();
 //			iter.remove();
+	}
+	//Designed to detect collision with the bottom edge of the screen's rectangle
+	boolean detectWallCollision(float x, float y) {
+		snakeHeadCollisionDetection = new Rectangle(x, y, headWidth, headHeight);
+		if(snakeHeadCollisionDetection.overlaps(playBoundaryBottom))
+		{
+			collision = true;
+		}
+		return collision;
 	}
 
 }
