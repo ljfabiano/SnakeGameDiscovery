@@ -3,12 +3,14 @@ package com.mygdx.game;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -17,6 +19,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,9 +30,13 @@ public class MyGdxGame extends ApplicationAdapter {
 	Texture img;
 	Texture imgTail;
 	Texture imgHead;
+	Texture imgSnakeHead;
 	float index;
 	ArrayList<Float> crumbsX = new ArrayList<Float>();
 	ArrayList<Float> crumbsY = new ArrayList<Float>();
+
+	private float lastTouchedPositionX = 0;
+	private float lastTouchedPositionY = 0;
 
 	boolean collision = false;
 
@@ -44,6 +51,16 @@ public class MyGdxGame extends ApplicationAdapter {
 	float headWidth = 256;
 	float headHeight = 256;
 
+	float screenHeight;
+	float screenWidth;
+
+	int dimensionOfCell = 10;
+	Array[] xArray = new Array[((int)screenWidth)/dimensionOfCell];
+	Array[] yArray = new Array[((int)screenHeight)/dimensionOfCell];
+
+	float mouseX;
+	float mouseY;
+	boolean didClick = false;
 
 	Stage stage;
 	TextButton button;
@@ -54,9 +71,14 @@ public class MyGdxGame extends ApplicationAdapter {
 	Rectangle playBoundaryTop;
 	Rectangle playBoundaryBottom;
 	Rectangle snakeHeadCollisionDetection;
+	Rectangle potentialSnakeHead;
+	ShapeRenderer myShape;
+
+	Camera myCamera;
 
 	Sprite head;
 	Sprite tail;
+	Sprite snakeHead;
 	//private int score;
 	String yourScoreName;
 	BitmapFont yourBitmapFontName;
@@ -67,6 +89,28 @@ public class MyGdxGame extends ApplicationAdapter {
 	//fastest it will go
 	static final float MAX_VELOCITY = 100;
 
+	public MyGdxGame()
+	{
+		super();
+
+	}
+
+	public float getLastTouchedPositionX() {
+		return lastTouchedPositionX;
+	}
+
+	public void setLastTouchedPositionX(float lastTouchedPositionX) {
+		this.lastTouchedPositionX = lastTouchedPositionX;
+	}
+
+	public float getLastTouchedPositionY() {
+		return lastTouchedPositionY;
+	}
+
+	public void setLastTouchedPositionY(float lastTouchedPositionY) {
+		this.lastTouchedPositionY = lastTouchedPositionY;
+	}
+
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
@@ -74,6 +118,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		//img = new Texture("Minecraft Experimental Skin1.8.png");
 		imgHead = new Texture("badlogic.jpg");
 		imgTail = new Texture("badlogic.jpg");
+		imgSnakeHead = new Texture("SnakeHead.png");
 		Sprite bottomBoundary = new Sprite();
 		bottomBoundary.setSize(80, 1);
 		bottomBoundary.setPosition(0f, 0f);
@@ -82,13 +127,25 @@ public class MyGdxGame extends ApplicationAdapter {
 		Actor boundary;
 		head = new Sprite(imgHead);
 		tail = new Sprite(imgTail);
+		snakeHead = new Sprite();
+		//snakeHead.setColor(0f, 255f, 0f, 0f);
+		//snakeHead.setSize(15, 15);
+		potentialSnakeHead = new Rectangle();
+
+		MyInputProcessor myProcessor = new MyInputProcessor(this);
+		Gdx.input.setInputProcessor(myProcessor);
+
+		myShape = new ShapeRenderer();
+
+		//myCamera = new Camera
+
 
 		//score = 0;
 		yourScoreName = "score: 0";
 		yourBitmapFontName = new BitmapFont();
 
 		stage = new Stage();
-		Gdx.input.setInputProcessor(stage);
+//		Gdx.input.setInputProcessor(stage);
 		font = new BitmapFont();
 		//skin = new Skin();
 		//buttonAtlas = new TextureAtlas(Gdx.files.internal("buttons/buttons.pack"));
@@ -102,6 +159,17 @@ public class MyGdxGame extends ApplicationAdapter {
 		//button.setOrigin(100, 0);
 		button.setPosition(75, 0);
 		stage.addActor(button);
+
+		//stage.addActor();
+
+		button.addListener(new ChangeListener() {
+			@Override
+			public void changed (ChangeEvent event, Actor actor) {
+				buttonSelectCounter++;
+				System.out.println("Button Pressed");
+				button.setText("button has been selected " + buttonSelectCounter + " times.");
+			}
+		});
 
 		button.addListener(new ChangeListener() {
 			@Override
@@ -132,7 +200,15 @@ public class MyGdxGame extends ApplicationAdapter {
 //boolean isOverlapping =
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+//		didClick = createRectangle();
+		if (didClick == true);
+		{
+//			myShape.begin(ShapeRenderer.ShapeType.Filled);
+//			myShape.setColor(0, 1, 0, 1);
+//			myShape.rect(mouseX, mouseY, 5, 5);
+//			//myShape.circle(x, y, radius);
+//			myShape.end();
+		}
 //		if(head.getBoundingRectangle().overlaps(playBoundaryBottom))
 //		{
 //			//System.out.println("head is over boundary");
@@ -143,18 +219,80 @@ public class MyGdxGame extends ApplicationAdapter {
 //			System.out.println("boundary is over head");
 //		}
 
+		//info for creating a game board
+
+//		float squareWidth = camera.viewportWidth / squaresOnWidth;
+//		float squareHeight = camera.viewportHeight / squaresOnHeight;
+//		square.setWidth(squareWidth);
+//		square.setHeight(squareHeight);
+//		batch.begin(); `
+//		for(int y = 0; y < squaresOnHeight; y++){
+//			for(int x = 0; x < squaresOnWidth; x++){
+//				square.setX(x * squareWidth);
+//				square.setY(y * squareHeight);
+//				square.draw(batch);
+//			}
+//		}
+//		batch.end();
+		float squareWidth = 160;
+		float squareHeight = 120;
+
+//		square.setHeight(squareHeight);
+
 		batch.begin();
+
+//		ShapeRenderer myShape = new ShapeRenderer();
+//		myShape.begin(ShapeRenderer.ShapeType.Filled);
+//		myShape.setColor(0, 1, 0, 1);
+//
+//		screenHeight = Gdx.graphics.getHeight();
+//		screenWidth = Gdx.graphics.getWidth();
+//		//System.out.println("screen height = " + screenHeight + " screen width = " + screenWidth);
+//		//height = 480 width = 640 default
+//		float drawPositionY = screenHeight - lastTouchedPositionY;
+//
+//		myShape.rect(lastTouchedPositionX, drawPositionY, 100, 100);
+//		//myShape.circle(x, y, radius);
+//		myShape.end();
+
+		ShapeRenderer myShape = new ShapeRenderer();
+		myShape.begin(ShapeRenderer.ShapeType.Filled);
+		myShape.setColor(0, 1, 0, 1);
+		screenHeight = Gdx.graphics.getHeight();
+		screenWidth = Gdx.graphics.getWidth();
+		float drawPositionY = screenHeight - lastTouchedPositionY;
+		//myShape.rect(lastTouchedPositionX, drawPositionY, 100, 100);
+
+		Cell myCell = createGridCell(lastTouchedPositionX, drawPositionY);
+		myShape.rect(myCell.getX(), myCell.getY(), 10, 10);
+		myShape.end();
+
+//		ShapeRenderer myShape2 = new ShapeRenderer();
+//		myShape2.begin(ShapeRenderer.ShapeType.Filled);
+//		myShape2.setColor(0, 0, 1, 1);
+//		myShape2.rect(0, 0, 25, 25);
+//		//myShape.circle(x, y, radius);
+//		myShape2.end();
+
+//		ShapeRenderer myShape3 = new ShapeRenderer();
+//		myShape3.begin(ShapeRenderer.ShapeType.Filled);
+//		myShape3.setColor(0, 0, 1, 1);
+//		myShape3.rect(300, 300, 100, 100);
+//		//myShape.circle(x, y, radius);
+//		myShape3.end();
+
 		//batch.draw(img, x, y);
 		//batch.draw(imgHead, xAutomatic + directionX, yAutomatic + directionY);
-		batch.draw(imgHead, xAutomatic, yAutomatic);
-		if((index - headWidth) < 0)
-		{
-			batch.draw(imgTail, crumbsX.get(0), crumbsY.get(0));
-		}
-		else {
-			batch.draw(imgTail, crumbsX.get((int)(index - headWidth)), crumbsY.get((int)(index - headHeight)));
-		}
-
+//		batch.draw(imgHead, xAutomatic, yAutomatic);
+//		if((index - headWidth) < 0)
+//		{
+//			batch.draw(imgTail, crumbsX.get(0), crumbsY.get(0));
+//		}
+//		else {
+//			batch.draw(imgTail, crumbsX.get((int)(index - headWidth)), crumbsY.get((int)(index - headHeight)));
+//		}
+		//batch.draw(imgSnakeHead, 300, 300);
+		//batch.imgHead, xAutomatic, yAutomatic);
 		//System.out.println("the height/width of tail " + head.getHeight() + " " + head.getWidth());
 //		if(tail.getX() + tail.getWidth() == head.getX()) {
 //			batch.draw(imgTail, (xAutomatic) - tail.getWidth(), yAutomatic);
@@ -186,6 +324,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		stage.draw();
 		//reset the collision boolean so it can be tested again next render cycle
 		collision = false;
+		didClick = false;
 
 	}
 
@@ -277,6 +416,46 @@ public class MyGdxGame extends ApplicationAdapter {
 //			yourScoreName = "score: " + score;
 //			dropSound.play();
 //			iter.remove();
+	}
+
+	boolean createRectangle() {
+
+		if (Gdx.input.isTouched()) {
+			//directionX = 0; directionY = 1;
+//			mouseX = Gdx.input.getX();
+//			mouseY = Gdx.input.getY();
+//			System.out.println("clicking the mouse left button.");
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	Cell createGridCell(float x, float y)
+	{
+		Cell myCell = new Cell();
+		for(int index = 0; index >= xArray.length; index++)
+		{
+			if(index * 10 > x)
+			{
+				--index;
+				myCell.setX(index * 10);
+				break;
+			}
+		}
+		for(int index = 0; index >= yArray.length; index++)
+		{
+			if(index * 10 > y)
+			{
+				--index;
+				myCell.setY(index * 10);
+				break;
+			}
+		}
+		//Cell myCell = new Cell();
+		return myCell;
 	}
 	//Designed to detect collision with the bottom edge of the screen's rectangle
 	boolean detectWallCollision(float x, float y) {
